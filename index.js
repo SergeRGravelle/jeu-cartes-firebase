@@ -1,10 +1,20 @@
 // Import stylesheets
 import './style.css';
 
+// Firebase App (the core Firebase SDK) is always required
+// and must be listed first
+import * as firebase from "firebase/app";
+
+// Add the Firebase products that you want to use
+import "firebase/auth";
+import "firebase/firestore";
+
+import * as firebaseui from "firebaseui";
+
 // Global variables
 
-var card = $(".card");
-var table = $("#table");
+const card = $(".card");
+const table = $("#table");
 var selected = null;
 var selectedlast = null;
 var topz = 1;
@@ -12,6 +22,20 @@ var VAL = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "J"
 var cardsID=[];
 var cardsOrder=[];
 var rejects=[];
+
+// Your web app's Firebase configuration
+var firebaseConfig = {
+  apiKey: "AIzaSyCOWNTKuXBnsexSrXsgrDqFas7fh4M26C8",
+  authDomain: "jeu-cartes-firebase.firebaseapp.com",
+  databaseURL: "https://jeu-cartes-firebase.firebaseio.com",
+  projectId: "jeu-cartes-firebase",
+  storageBucket: "jeu-cartes-firebase.appspot.com",
+  messagingSenderId: "1061076344801",
+  appId: "1:1061076344801:web:3161788f02338ea36a7ca0"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
 
 $(document).ready(function() {
 
