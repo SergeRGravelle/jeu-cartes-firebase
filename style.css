@@ -3,7 +3,12 @@
   padding: 20px;
   color: black;
 }
-
+.lock-screen {
+    height: 100%;
+    overflow: hidden;
+    width: 100%;
+    position: fixed;
+}
 #info {
   position: absolute;
   bottom: 5px;
