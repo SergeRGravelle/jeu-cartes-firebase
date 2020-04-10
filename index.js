@@ -53,7 +53,7 @@ $(document).ready(function() {
 
   document.getElementById("shuffle").addEventListener("click", testShuffle);
   document.getElementById("showcards").addEventListener("click", showCards);
-  document.getElementById("order").addEventListener("click", function(){cardsOrder.sort()});
+  document.getElementById("order").addEventListener("click", function(){cardsOrder.sort(function(a, b){return a-b})});
   document.getElementById("flip").addEventListener("click", flipAll);
  
 });
@@ -154,7 +154,7 @@ function flipCard(e, t) {
 function genDeck() {
   var c=0;
   topz = 1;
-  for (var j=1; j < 14 ; j++) {
+  for (var j=1; j <= 4 ; j++) {
     var sp = 25;
     var leftpos = 50;
     var toppos = 50;
