@@ -64,6 +64,8 @@ for (var i=0; i<5; i++) {
   dataToImport["card"+i] = {id:i, posx:i*2};
 }
 database.ref("game123/listofobjects/").set(dataToImport);
+
+debugger;
 // --- TESTS WAYS OF ADDINT DATA TO A REALTIME DATABASE IN FIREBASE  ----
 
 
@@ -169,7 +171,7 @@ function checkInside(item, region) {
 
 function flipAll() {
   for (var j = 0; j < cardsID.length; j++) {
-    var elem = $(cardsID[cardsOrder[j]]);
+    var elem = $("#" + cardsID[cardsOrder[j]]);
     if (elem.hasClass("highlight")) {
       elem.removeClass("highlight");
     } else {
@@ -197,7 +199,7 @@ function genDeck() {
 
     // diamond
     var newcard = $("<div></div>").text(VAL[j - 1] + " \u2666");
-    cardsID.push("#" + j + "D");
+    cardsID.push(j + "D");
     cardsOrder.push(c++);
     newcard.attr("id", j + "D");
     newcard.addClass("card redcard");
@@ -210,12 +212,12 @@ function genDeck() {
 
     // hearts
     var newcard = $("<div></div>").text(VAL[j - 1] + " \u2665");
-    cardsID.push("#" + j + "H");
+    cardsID.push(j + "H");
     cardsOrder.push(c++);
     newcard.attr("id", j + "H");
     newcard.addClass("card redcard");
     newcard.css({
-      left: parseInt(leftpos + sp * 2 + (j * sp) / 2) + "px",
+      left: parseInt(leftpos + sp * 1 + (j * sp) / 2) + "px",
       top: parseInt(toppos + j * sp + sp / 8) + "px"
     });
     newcard.css({ "z-index": topz++ });
@@ -223,26 +225,26 @@ function genDeck() {
 
     // spades
     var newcard = $("<div></div>").text(VAL[j - 1] + " \u2660");
-    cardsID.push("#" + j + "S");
+    cardsID.push(j + "S");
     cardsOrder.push(c++);
     newcard.attr("id", j + "S");
     newcard.addClass("card blackcard");
     newcard.css({
-      left: parseInt(leftpos + sp * 4 + (j * sp) / 2) + "px",
+      left: parseInt(leftpos + sp * 2 + (j * sp) / 2) + "px",
       top: parseInt(toppos + j * sp + (sp * 2) / 8) + "px"
     });
     newcard.css({ "z-index": topz++ });
     $("#deck").append(newcard);
 
     // clubs
-    cardsID.push("#" + j + "C");
+    cardsID.push(j + "C");
     cardsOrder.push(c++);
     var newcard = $("<div></div>").text(VAL[j - 1] + " \u2663");
     newcard.attr("id", j + "C");
     newcard.addClass("card blackcard");
     newcard.css({
-      left: parseInt(leftpos + sp * 4 + (j * sp) / 2) + "px",
-      top: parseInt(toppos + j * sp + (sp * 2) / 8) + "px"
+      left: parseInt(leftpos + sp * 3 + (j * sp) / 2) + "px",
+      top: parseInt(toppos + j * sp + (sp * 3) / 8) + "px"
     });
     newcard.css({ "z-index": topz++ }); 
     $("#deck").append(newcard);
@@ -252,14 +254,15 @@ function genDeck() {
   // cardsPosData
   for (var o of cardsID){
     cardsPosDataObjects[o] = {
-                          "posx":parseInt($(o).position().left), 
-                          "posy":parseInt($(o).position().top),
-                          "posz":parseInt($(o).css("z-index")),
+                          "posx":parseInt($("#" + o).position().left), 
+                          "posy":parseInt($("#" + o).position().top),
+                          "posz":parseInt($("#" + o).css("z-index")),
                           "facedown":false  };
 
   }
-  // console.log(JSON.stringify(cardsPosDataObjects)); debugger;
-
+  console.log(JSON.stringify(cardsPosDataObjects));
+  database.ref("game123/cardpos/").set(cardsPosDataObjects) ;
+  debugger;
 }
 
 /**
@@ -307,12 +310,6 @@ function showCards() {
   cardsPosData.length = 0;  // clear array
 
   for (var j = 0; j < cardsOrder.length; j++) {
-    var elem = $(cardsID[cardsOrder[j]]);
-  
-    cardsPosData.push({ "id":cardsID[cardsOrder[j]], 
-                        "posx":parseInt(leftPos), 
-                        "posy":parseInt(topPos),
-                        "posz":topz++  });
    
    cardsPosDataObjects[cardsID[cardsOrder[j]]] = {
                         "posx":parseInt(leftPos), 
@@ -321,17 +318,18 @@ function showCards() {
                         "facedown":elem.hasClass("highlight") } ;
                           // do not change "face-down"
 
-    leftPos += $(cardsID[1]).outerWidth();
+    leftPos += $("#" + cardsID[1]).outerWidth();
     
     if (numRow++ >= maxRow) {
       numRow = 1;
-      topPos += $(cardsID[1]).outerHeight();
+      topPos += $("#" + cardsID[1]).outerHeight();
       leftPos = 30;
     }
 
   }
   //  console.log( JSON.stringify(cardsPosDataObjects) ); debugger;
-  
+  database.ref("game123/cardpos/").set(cardsPosDataObjects);
+
   updateCardsDisplayOnTable();
 }
 
