@@ -8,6 +8,8 @@ import * as firebase from "firebase/app";
 // Add the Firebase products that you want to use
 import "firebase/auth";
 import "firebase/firestore";
+import "firebase/Firebase";   // real-time database
+
 
 import * as firebaseui from "firebaseui";
 
@@ -37,6 +39,14 @@ var firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+
+// Get a reference to the database service
+var database = firebase.database();
+
+// test writing data to realtime database
+database.ref("game1/cards/").set({id:"6C",posx:10,posy:15});
+console.log("wrote to database...");
+debugger;
 
 $(document).ready(function() {
   prepTableMemoryGame();
