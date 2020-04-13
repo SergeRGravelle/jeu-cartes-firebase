@@ -7,8 +7,8 @@ import * as firebase from "firebase/app";
 
 // Add the Firebase products that you want to use
 import "firebase/auth";
-import "firebase/firestore";
-import "firebase/Firebase";   // real-time database
+import "firebase/firestore";  // Cloud Firestore
+import "firebase/database";   // real-time database
 
 
 import * as firebaseui from "firebaseui";
@@ -24,7 +24,7 @@ const VAL = new Array("A","2","3","4","5","6", "7", "8", "9", "10", "J", "Q", "K
 var cardsID = [];
 var cardsOrder = [];
 var rejects = [];
-var cardsPosData = [];
+var cardsPosDataObjects = {};
 
 // Your web app's Firebase configuration
 var firebaseConfig = {
@@ -43,10 +43,29 @@ firebase.initializeApp(firebaseConfig);
 // Get a reference to the database service
 var database = firebase.database();
 
+// --- TESTS WAYS OF ADDINT DATA TO A REALTIME DATABASE IN FIREBASE  ----
 // test writing data to realtime database
-database.ref("game1/cards/").set({id:"6C",posx:10,posy:15});
-console.log("wrote to database...");
-debugger;
+database.ref("game123/deck/").set( {
+                  card1 : {id:"6C",posx:10,posy:15},
+                  card2 : {id:"7H",posx:12,posy:15}
+                  });
+
+// test update one property
+database.ref("game123/deck/card1").update({posy:100});
+
+// test add a record using push
+database.ref("game123/deck/").push( {
+                  card3 : {id:"9H",posx:50,posy:60}
+});
+
+// test list of objects
+var dataToImport = {};
+for (var i=0; i<5; i++) {
+  dataToImport["card"+i] = {id:i, posx:i*2};
+}
+database.ref("game123/listofobjects/").set(dataToImport);
+// --- TESTS WAYS OF ADDINT DATA TO A REALTIME DATABASE IN FIREBASE  ----
+
 
 $(document).ready(function() {
   prepTableMemoryGame();
@@ -232,12 +251,15 @@ function genDeck() {
 
   // cardsPosData
   for (var o of cardsID){
-     cardsPosData.push({  "id":o, 
+    cardsPosDataObjects[o] = {
                           "posx":parseInt($(o).position().left), 
                           "posy":parseInt($(o).position().top),
-                          "posz":parseInt($(o).css("z-index"))  });   
+                          "posz":parseInt($(o).css("z-index")),
+                          "facedown":false  };
+
   }
-  //  console.log(JSON.stringify(cardsPosData)); debugger;
+  // console.log(JSON.stringify(cardsPosDataObjects)); debugger;
+
 }
 
 /**
@@ -290,7 +312,14 @@ function showCards() {
     cardsPosData.push({ "id":cardsID[cardsOrder[j]], 
                         "posx":parseInt(leftPos), 
                         "posy":parseInt(topPos),
-                        "posz":topz++  });   
+                        "posz":topz++  });
+   
+   cardsPosDataObjects[cardsID[cardsOrder[j]]] = {
+                        "posx":parseInt(leftPos), 
+                        "posy":parseInt(topPos),
+                        "posz":topz++,
+                        "facedown":elem.hasClass("highlight") } ;
+                          // do not change "face-down"
 
     leftPos += $(cardsID[1]).outerWidth();
     
@@ -301,7 +330,8 @@ function showCards() {
     }
 
   }
-  // console.log( JSON.stringify(cardsPosData) );
+  //  console.log( JSON.stringify(cardsPosDataObjects) ); debugger;
+  
   updateCardsDisplayOnTable();
 }
 
@@ -311,12 +341,19 @@ function showCards() {
  */
 function updateCardsDisplayOnTable() {
 
-  for (var o of cardsPosData){
-    var elem = $(o.id);
-    console.log("%s %i %i %i   %s", o.id, o.posx, o.posy, o.posz, elem.text());
-    elem.animate({ "left": o.posx + "px", 
-                   "top":  o.posy + "px" });
-    elem.css({ "z-index":  o.posz });
+  for (var o in cardsPosDataObjects){
+    var elem = $(o);
+    // console.log("%s %i %i  %s", o, cardsPosDataObjects[o].posx, cardsPosDataObjects[o].posy, elem.text());
+    elem.animate({ "left": cardsPosDataObjects[o].posx + "px", 
+                  "top":  cardsPosDataObjects[o].posy + "px" });
+    elem.css({ "z-index":  cardsPosDataObjects[o].posz });
+
+    if (cardsPosDataObjects[o].facedown) {
+      elem.addClass("highlight");
+    } else {
+      elem.removeClass("highlight");
+    }
   }
-  debugger;
+  
+  // debugger;
 }
