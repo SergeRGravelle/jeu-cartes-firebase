@@ -65,7 +65,7 @@ for (var i=0; i<5; i++) {
 }
 database.ref("game123/listofobjects/").set(dataToImport);
 
-debugger;
+// debugger;
 // --- TESTS WAYS OF ADDINT DATA TO A REALTIME DATABASE IN FIREBASE  ----
 
 
@@ -134,7 +134,7 @@ function updateTable() {
   for (var i = 0; i < rejects.length; i++) {
     var count = 0;
     for (var j = 0; j < cardsID.length; j++) {
-      if (checkInside(cardsID[cardsOrder[j]], rejects[i])) {
+      if (checkInside("#" + cardsID[cardsOrder[j]], rejects[i])) {
         count++;
       }
     }
@@ -262,7 +262,7 @@ function genDeck() {
   }
   console.log(JSON.stringify(cardsPosDataObjects));
   database.ref("game123/cardpos/").set(cardsPosDataObjects) ;
-  debugger;
+  // debugger;
 }
 
 /**
@@ -307,10 +307,10 @@ function showCards() {
   var numRow = 1;
   var topz = 1;
   
-  cardsPosData.length = 0;  // clear array
+  // cardsPosData.length = 0;  // clear array
 
   for (var j = 0; j < cardsOrder.length; j++) {
-   
+   var elem = $("#" + cardsID[cardsOrder[j]]);
    cardsPosDataObjects[cardsID[cardsOrder[j]]] = {
                         "posx":parseInt(leftPos), 
                         "posy":parseInt(topPos),
@@ -318,11 +318,11 @@ function showCards() {
                         "facedown":elem.hasClass("highlight") } ;
                           // do not change "face-down"
 
-    leftPos += $("#" + cardsID[1]).outerWidth();
+    leftPos += elem.outerWidth();
     
     if (numRow++ >= maxRow) {
       numRow = 1;
-      topPos += $("#" + cardsID[1]).outerHeight();
+      topPos += elem.outerHeight();
       leftPos = 30;
     }
 
@@ -340,7 +340,7 @@ function showCards() {
 function updateCardsDisplayOnTable() {
 
   for (var o in cardsPosDataObjects){
-    var elem = $(o);
+    var elem = $("#" + o);
     // console.log("%s %i %i  %s", o, cardsPosDataObjects[o].posx, cardsPosDataObjects[o].posy, elem.text());
     elem.animate({ "left": cardsPosDataObjects[o].posx + "px", 
                   "top":  cardsPosDataObjects[o].posy + "px" });
