@@ -4,14 +4,15 @@ import "./style.css";
 // Firebase App (the core Firebase SDK) is always required
 // and must be listed first
 import * as firebase from "firebase/app";
+import * as firebaseui from "firebaseui";
 
 // Add the Firebase products that you want to use
 import "firebase/auth";
 import "firebase/firestore";  // Cloud Firestore
 import "firebase/database";   // real-time database
+import "firebase/storage";
 
 
-import * as firebaseui from "firebaseui";
 
 // Global variables
 
@@ -39,37 +40,40 @@ var firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-
 // Get a reference to the database service
 var database = firebase.database();
+// Create a reference with an initial file path and name
+var storage = firebase.storage();
 
-// --- TESTS WAYS OF ADDINT DATA TO A REALTIME DATABASE IN FIREBASE  ----
-// test writing data to realtime database
-database.ref("game123/deck/").set( {
-                  card1 : {id:"6C",posx:10,posy:15},
-                  card2 : {id:"7H",posx:12,posy:15}
-                  });
+/*  --- TESTS WAYS OF ADDINT DATA TO A REALTIME DATABASE IN FIREBASE  ----
+  // test writing data to realtime database
+  database.ref("game123/deck/").set( {
+                    card1 : {id:"6C",posx:10,posy:15},
+                    card2 : {id:"7H",posx:12,posy:15}
+                    });
 
-// test update one property
-database.ref("game123/deck/card1").update({posy:100});
+  // test update one property
+  database.ref("game123/deck/card1").update({posy:100});
 
-// test add a record using push
-database.ref("game123/deck/").push( {
-                  card3 : {id:"9H",posx:50,posy:60}
-});
+  // test add a record using push
+  database.ref("game123/deck/").push( {
+                    card3 : {id:"9H",posx:50,posy:60}
+  });
 
-// test list of objects
-var dataToImport = {};
-for (var i=0; i<5; i++) {
-  dataToImport["card"+i] = {id:i, posx:i*2};
-}
-database.ref("game123/listofobjects/").set(dataToImport);
+  // test list of objects
+  var dataToImport = {};
+  for (var i=0; i<5; i++) {
+    dataToImport["card"+i] = {id:i, posx:i*2};
+  }
+  database.ref("game123/listofobjects/").set(dataToImport);
 
-// debugger;
-// --- TESTS WAYS OF ADDINT DATA TO A REALTIME DATABASE IN FIREBASE  ----
-
+  // debugger;
+// --- TESTS WAYS OF ADDINT DATA TO A REALTIME DATABASE IN FIREBASE  ----  */
 
 $(document).ready(function() {
+   // Card image test (testing firebase storage functionality)
+  setCardImage("Playing_card_club_A.svg","cardimage");
+  
   prepTableMemoryGame();
   genDeck();
 
@@ -86,6 +90,8 @@ $(document).ready(function() {
     elem[i].addEventListener("click", function(e) {
       flipCard(e, this);
     });
+
+
   }
 
   document.getElementById("shuffle").addEventListener("click", testShuffle);
@@ -98,6 +104,47 @@ $(document).ready(function() {
   document.getElementById("flip").addEventListener("click", flipAll);
 });
 
+
+/**
+ * Set the image stored in the Firebase storage to an image getElementById
+ * Process errors correctly
+ * 
+ */
+function setCardImage(imagename, elemID) {
+
+  // Create a reference to the file we want to download
+  var storageRef = storage.ref();
+  var cardsRef = storageRef.child('cards');
+  var imageRef = cardsRef.child(imagename);
+  
+ // Get the download URL
+  imageRef.getDownloadURL().then(function(url) {
+    var img = document.getElementById(elemID);
+    img.src = url;
+  }).catch(function(error) {
+    // A full list of error codes is available at
+    // https://firebase.google.com/docs/storage/web/handle-errors
+    switch (error.code) {
+      case 'storage/object-not-found':
+        console.log("File doesn't exist");
+        break;
+      case 'storage/unauthorized':
+        console.log("User doesn't have permission to access the object");
+        break;
+      case 'storage/canceled':
+        console.log("User canceled the upload");
+        break;
+      case 'storage/unknown':
+        console.log("Unknown error occurred, inspect the server response");
+        break;
+    }
+  });
+
+}
+
+/**
+ * Select card 
+ */
 function selectCard(e, t) {
   var posx = parseInt( e.touches[0].clientX - table.position().left - ($(t).outerWidth() * 3) / 4 ) + "px";
   var posy = parseInt( e.touches[0].clientY - table.position().top - ($(t).outerHeight() * 3) / 4 ) + "px";
@@ -221,6 +268,7 @@ function genDeck() {
       top: parseInt(toppos + j * sp + sp / 8) + "px"
     });
     newcard.css({ "z-index": topz++ });
+    newcard.css({ transform: "scale(1.1)"});
     $("#deck").append(newcard);
 
     // spades
@@ -234,6 +282,7 @@ function genDeck() {
       top: parseInt(toppos + j * sp + (sp * 2) / 8) + "px"
     });
     newcard.css({ "z-index": topz++ });
+    newcard.css({transform: "rotate(5deg)"});
     $("#deck").append(newcard);
 
     // clubs
