@@ -69,13 +69,21 @@ var storage = firebase.storage();
   // debugger;
 // --- TESTS WAYS OF ADDINT DATA TO A REALTIME DATABASE IN FIREBASE  ----  */
 
+/**
+ *  MAIN 
+ * 
+ * 
+ */
 $(document).ready(function() {
-   // Card image test (testing firebase storage functionality)
-  setCardImage("Playing_card_club_A.svg","cardimage");
-  
+
+  // setup table and generate card deck  
   prepTableMemoryGame();
   genDeck();
 
+  // Card image test (testing firebase storage functionality)
+  // setCardImage("Playing_card_club_A.svg","cardimage");
+
+  // add touh events to each card to allow move or flip
   var elem = document.getElementsByClassName("card");
   for (var i = 0; i < elem.length; i++) {
     elem[i].addEventListener("touchmove", function(e) {
@@ -90,17 +98,18 @@ $(document).ready(function() {
       flipCard(e, this);
     });
 
-
   }
 
+  // add functions to each button 
   document.getElementById("shuffle").addEventListener("click", testShuffle);
   document.getElementById("showcards").addEventListener("click", showCards);
+  document.getElementById("flipup").addEventListener("click", flipAllUp);
+  document.getElementById("flipdown").addEventListener("click", flipAllDown);
   document.getElementById("order").addEventListener("click", function() {
     cardsOrder.sort(function(a, b) {
       return a - b;
     });
   });
-  document.getElementById("flip").addEventListener("click", flipAll);
 
   // listner (".on") realtime database changes and update card positions
   // this allows for another user to change card positions and updates will be reflected in another client session
@@ -119,7 +128,6 @@ $(document).ready(function() {
           }
         });
     });
-
 });
 
 
@@ -157,7 +165,6 @@ function setCardImage(imagename, elemID) {
         break;
     }
   });
-
 }
 
 /**
@@ -167,30 +174,39 @@ function selectCard(e, t) {
   var posx = parseInt( e.touches[0].clientX - table.position().left - ($(t).outerWidth() * 3) / 4 ) + "px";
   var posy = parseInt( e.touches[0].clientY - table.position().top - ($(t).outerHeight() * 3) / 4 ) + "px";
   var posz = $(t).css("z-index");
-  $("#info").text( "INFO: selected " + $(t).text() + " @ (" + posx + ", " + posy + ", " + posz + ")" );
-
+  
   $(t).css({ left: posx, top: posy });
   if (selected != selectedlast) {
     $(t).css({ "z-index": topz++ });
-  }
+  }top
   selected = $(t);
   selectedlast = selected;
+  
+  // $("#info").text( "INFO: selected " + $(t).text() + " @ (" + posx + ", " + posy + ", " + posz + ")" );
+
 }
 
 function unselectCard(e, t) {
-  $("#info").text("INFO:");
+  // $("#info").text("INFO:");
   selected = null;
+
+  console.log( "%i %i %s", $(t).position().left, $(t).position().top, $(t).css("z-index"));
+  database.ref("game123/cardpos/" + t.id).set( {
+     "posx" : parseInt($(t).position().left), 
+     "posy" : parseInt($(t).position().top), 
+     "posz" : parseInt($(t).css("z-index"))+1 
+     });
 
   updateTable();
 }
 
 function prepTableMemoryGame() {
   for (var j = 0; j < 4; j++) {
-    var newreject = $("<div></div>").text("joueur " + parseInt(j + 1));
+    var newreject = $("<div></div>").text("0 for player " + parseInt(j + 1));
     rejects.push("#reject" + j);
     newreject.attr("id", "reject" + j);
     newreject.addClass("reject");
-    newreject.css({ top: parseInt(10 + j * 100) + "px" });
+    newreject.css({ top: parseInt(30 + j * 120) + "px" });
     table.append(newreject);
   }
 }
@@ -203,7 +219,7 @@ function updateTable() {
         count++;
       }
     }
-    $(rejects[i]).text("Joueur " + parseInt(i + 1) + ": " + count);
+    $(rejects[i]).text(count + " for player " + parseInt(i + 1));
   }
 }
 
@@ -234,22 +250,26 @@ function checkInside(item, region) {
   return inside;
 }
 
-function flipAll() {
-  for (var j = 0; j < cardsID.length; j++) {
-    var elem = $("#" + cardsID[cardsOrder[j]]);
-    if (elem.hasClass("highlight")) {
-      elem.removeClass("highlight");
+
+function flipCard(e, t) {
+  database.ref("game123/cardpos/" + t.id + "/facedown/").once("value", function(data) {
+    if (data.val()) {
+      database.ref("game123/cardpos/" + t.id + "/facedown/").set(false);
     } else {
-      elem.addClass("highlight");
+      database.ref("game123/cardpos/" + t.id + "/facedown/").set(true);
     }
+
+  });
+}
+function flipAllUp() {
+  for (var j = 0; j < cardsID.length; j++) {
+      database.ref("game123/cardpos/" + cardsID[cardsOrder[j]] + "/facedown/").set(false);
   }
 }
 
-function flipCard(e, t) {
-  if ($(t).hasClass("highlight")) {
-    $(t).removeClass("highlight");
-  } else {
-    $(t).addClass("highlight");
+function flipAllDown() {
+  for (var j = 0; j < cardsID.length; j++) {
+      database.ref("game123/cardpos/" + cardsID[cardsOrder[j]] + "/facedown/").set(true);
   }
 }
 
@@ -257,7 +277,7 @@ function flipCard(e, t) {
 function genDeck() {
   var c = 0;
   topz = 1;
-  for (var j = 1; j <= 4; j++) {
+  for (var j = 1; j <= 13; j++) {
     var sp = 25;
     var leftpos = 50;
     var toppos = 50;
@@ -273,6 +293,7 @@ function genDeck() {
       top: parseInt(toppos + j * sp) + "px"
     });
     newcard.css({ "z-index": topz++ });
+    newcard.css({transform: "rotate(2deg)"});
     $("#deck").append(newcard);
 
     // hearts
@@ -286,7 +307,8 @@ function genDeck() {
       top: parseInt(toppos + j * sp + sp / 8) + "px"
     });
     newcard.css({ "z-index": topz++ });
-    newcard.css({ transform: "scale(1.1)"});
+    newcard.css({transform: "rotate(-3deg)"});
+    // newcard.css({ transform: "scale(1.1)"});
     $("#deck").append(newcard);
 
     // spades
@@ -300,7 +322,7 @@ function genDeck() {
       top: parseInt(toppos + j * sp + (sp * 2) / 8) + "px"
     });
     newcard.css({ "z-index": topz++ });
-    newcard.css({transform: "rotate(5deg)"});
+    newcard.css({transform: "rotate(4deg)"});
     $("#deck").append(newcard);
 
     // clubs
@@ -316,7 +338,7 @@ function genDeck() {
     newcard.css({ "z-index": topz++ }); 
     $("#deck").append(newcard);
   }
-  $("#info").text(cardsOrder.toString());
+  // $("#info").text(cardsOrder.toString());
 
   // cardsPosData
   var cardsPosDataObjects = {};
@@ -351,14 +373,14 @@ function testShuffle() {
   var list = cardsOrder;
   var ln = list.length;
 
-  $("#info").text(list.toString());
+  // $("#info").text(list.toString());
 
   for (var j = 0; j < 100; j++) {
     var n = randomNb(0, ln - 1);
     var section = list.pop();
     list.splice(n, 0, section);
     // console.log("n: %i, (%s)  list: %s ", n, section, list.toString());
-    $("#info").text(list.toString());
+    // $("#info").text(list.toString());
   }
 
   cardsOrder = list;
