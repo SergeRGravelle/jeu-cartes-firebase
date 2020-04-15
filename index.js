@@ -25,7 +25,6 @@ const VAL = new Array("A","2","3","4","5","6", "7", "8", "9", "10", "J", "Q", "K
 var cardsID = [];
 var cardsOrder = [];
 var rejects = [];
-var cardsPosDataObjects = {};
 
 // Your web app's Firebase configuration
 var firebaseConfig = {
@@ -102,6 +101,25 @@ $(document).ready(function() {
     });
   });
   document.getElementById("flip").addEventListener("click", flipAll);
+
+  // listner (".on") realtime database changes and update card positions
+  // this allows for another user to change card positions and updates will be reflected in another client session
+  database.ref("game123/cardpos/").on("value", function(snapshot) {
+        snapshot.forEach(function(data) {
+          var elem = $("#" + data.key);
+          var o = data.val();
+          elem.animate({ "left": o.posx + "px", 
+                        "top":  o.posy + "px" });
+          elem.css({ "z-index":  o.posz });
+
+          if (o.facedown) {
+            elem.addClass("highlight");
+          } else {
+            elem.removeClass("highlight");
+          }
+        });
+    });
+
 });
 
 
@@ -301,6 +319,7 @@ function genDeck() {
   $("#info").text(cardsOrder.toString());
 
   // cardsPosData
+  var cardsPosDataObjects = {};
   for (var o of cardsID){
     cardsPosDataObjects[o] = {
                           "posx":parseInt($("#" + o).position().left), 
@@ -309,7 +328,7 @@ function genDeck() {
                           "facedown":false  };
 
   }
-  console.log(JSON.stringify(cardsPosDataObjects));
+  // console.log(JSON.stringify(cardsPosDataObjects));
   database.ref("game123/cardpos/").set(cardsPosDataObjects) ;
   // debugger;
 }
@@ -356,6 +375,8 @@ function showCards() {
   var numRow = 1;
   var topz = 1;
   
+  var cardsPosDataObjects = {};
+ 
   // cardsPosData.length = 0;  // clear array
 
   for (var j = 0; j < cardsOrder.length; j++) {
@@ -379,28 +400,31 @@ function showCards() {
   //  console.log( JSON.stringify(cardsPosDataObjects) ); debugger;
   database.ref("game123/cardpos/").set(cardsPosDataObjects);
 
-  updateCardsDisplayOnTable();
+  // should not be needed:  updateCardsDisplayOnTable();
 }
 
 
 /**
  * Update the graphical display of the cards on the prepTable
+ * In this function, the data is read ONCE from the realtime database
+ * 
  */
 function updateCardsDisplayOnTable() {
 
-  for (var o in cardsPosDataObjects){
-    var elem = $("#" + o);
-    // console.log("%s %i %i  %s", o, cardsPosDataObjects[o].posx, cardsPosDataObjects[o].posy, elem.text());
-    elem.animate({ "left": cardsPosDataObjects[o].posx + "px", 
-                  "top":  cardsPosDataObjects[o].posy + "px" });
-    elem.css({ "z-index":  cardsPosDataObjects[o].posz });
+  database.ref("game123/cardpos/").once("value", function(snapshot) {
+      snapshot.forEach(function(data) {
+        var elem = $("#" + data.key);
+        var o = data.val();
+        elem.animate({ "left": o.posx + "px", 
+                       "top":  o.posy + "px" });
+        elem.css({ "z-index":  o.posz });
 
-    if (cardsPosDataObjects[o].facedown) {
-      elem.addClass("highlight");
-    } else {
-      elem.removeClass("highlight");
-    }
-  }
-  
-  // debugger;
+        if (o.facedown) {
+          elem.addClass("highlight");
+        } else {
+          elem.removeClass("highlight");
+        }
+      });
+  });
+
 }
