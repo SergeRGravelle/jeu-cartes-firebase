@@ -194,7 +194,8 @@ function unselectCard(e, t) {
   database.ref("game123/cardpos/" + t.id).set( {
      "posx" : parseInt($(t).position().left), 
      "posy" : parseInt($(t).position().top), 
-     "posz" : parseInt($(t).css("z-index"))+1 
+     "posz" : parseInt($(t).css("z-index"))+1, 
+     "facedown":$(t).hasClass("highlight") 
      });
 
   updateTable();
@@ -252,14 +253,27 @@ function checkInside(item, region) {
 
 
 function flipCard(e, t) {
-  database.ref("game123/cardpos/" + t.id + "/facedown/").once("value", function(data) {
-    if (data.val()) {
+
+  var cc = database.ref("game123/cardpos/" + t.id );
+  cc.once("value")
+    .then(function(snapshot) {
+      console.log("key: " + snapshot.key + "  facedown: " + snapshot.child("facedown").val() );
+     if (snapshot.child("facedown").val()) {
       database.ref("game123/cardpos/" + t.id + "/facedown/").set(false);
     } else {
       database.ref("game123/cardpos/" + t.id + "/facedown/").set(true);
     }
-
   });
+
+ 
+  // database.ref("game123/cardpos/" + t.id + "/facedown/").once("value", function(data) {
+  //   if (data.val()) {
+  //     database.ref("game123/cardpos/" + t.id + "/facedown/").set(false);
+  //   } else {
+  //     database.ref("game123/cardpos/" + t.id + "/facedown/").set(true);
+  //   }
+
+  // });
 }
 function flipAllUp() {
   for (var j = 0; j < cardsID.length; j++) {
@@ -293,7 +307,7 @@ function genDeck() {
       top: parseInt(toppos + j * sp) + "px"
     });
     newcard.css({ "z-index": topz++ });
-    newcard.css({transform: "rotate(2deg)"});
+    // newcard.css({transform: "rotate(2deg)"});
     $("#deck").append(newcard);
 
     // hearts
@@ -307,7 +321,7 @@ function genDeck() {
       top: parseInt(toppos + j * sp + sp / 8) + "px"
     });
     newcard.css({ "z-index": topz++ });
-    newcard.css({transform: "rotate(-3deg)"});
+    // newcard.css({transform: "rotate(-3deg)"});
     // newcard.css({ transform: "scale(1.1)"});
     $("#deck").append(newcard);
 
@@ -322,7 +336,7 @@ function genDeck() {
       top: parseInt(toppos + j * sp + (sp * 2) / 8) + "px"
     });
     newcard.css({ "z-index": topz++ });
-    newcard.css({transform: "rotate(4deg)"});
+    // newcard.css({transform: "rotate(4deg)"});
     $("#deck").append(newcard);
 
     // clubs
